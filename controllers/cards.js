@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Card = require('../models/card');
 const {
   iternalServerError,
@@ -20,7 +21,7 @@ const createCard = (req, res) => {
   })
     .then((cards) => res.status(201).send(cards))
     .catch((err) => {
-      if (err.message.includes('Validation failed')) {
+      if (err.stack.includes('ValidationError')) {
         invalidDataError(
           res,
           err,
@@ -28,6 +29,7 @@ const createCard = (req, res) => {
         );
         return;
       }
+
       iternalServerError(res, err);
     });
 };
@@ -37,10 +39,15 @@ const deleteCard = (req, res) => {
     .orFail(() => new Error('Not found'))
     .then(() => res.status(200).send({ message: 'Card is delete' }))
     .catch((err) => {
+      if (err.stack.includes('CastError')) {
+        invalidDataError(res, err, 'Переданы некорректные _id карточки');
+      }
+
       if (err.message === 'Not found') {
         notFoundError(res, err, 'Карточка с указанным _id не найдена.');
         return;
       }
+
       iternalServerError(res, err);
     });
 };
@@ -64,10 +71,15 @@ const likeCard = async (req, res) => {
 
     res.status(200).send(card);
   } catch (err) {
+    if (err.stack.includes('CastError')) {
+      invalidDataError(res, err, 'Передан некорректный _id карточки');
+    }
+
     if (err.message === 'Not found') {
       notFoundError(res, err, 'Передан несуществующий _id карточки');
       return;
     }
+
     if (err.message === 'Invalid data') {
       invalidDataError(
         res,
@@ -76,6 +88,7 @@ const likeCard = async (req, res) => {
       );
       return;
     }
+
     iternalServerError(res, err);
   }
 };
@@ -83,6 +96,9 @@ const likeCard = async (req, res) => {
 const dislikeCard = async (req, res) => {
   const { _id } = req.user;
   try {
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      throw new Error('Incorrect id');
+    }
     const oldCard = await Card.findById(req.params.cardId);
 
     if (!oldCard) {
@@ -99,10 +115,15 @@ const dislikeCard = async (req, res) => {
 
     res.status(200).send(card);
   } catch (err) {
+    if (err.message === 'Incorrect id') {
+      invalidDataError(res, err, 'Переданы некорректные _id карточки');
+    }
+
     if (err.message === 'Not found') {
       notFoundError(res, err, 'Передан несуществующий _id карточки');
       return;
     }
+
     if (err.message === 'Invalid data') {
       invalidDataError(
         res,

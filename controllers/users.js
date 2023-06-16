@@ -24,6 +24,10 @@ const getUserById = (req, res) => {
         notFoundError(res, err, 'Пользователь по указанному _id не найден.');
         return;
       }
+      if (err.stack.includes('CastError')) {
+        invalidDataError(res, err, 'Передан некорректный _id пользователя');
+        return;
+      }
       iternalServerError(res, err);
     });
 };
@@ -32,7 +36,7 @@ const createUser = (req, res) => {
   User.create(req.body)
     .then((user) => res.status(201).send(user))
     .catch((err) => {
-      if (err.message.includes('Validation failed')) {
+      if (err.message.includes('validation failed')) {
         invalidDataError(
           res,
           err,
