@@ -14,5 +14,6 @@ app.use(setUserId);
 app.use(router);
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`Server start on port: ${PORT}`);
 });
