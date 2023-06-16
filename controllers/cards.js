@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Card = require('../models/card');
 const {
   iternalServerError,
@@ -96,9 +95,6 @@ const likeCard = async (req, res) => {
 const dislikeCard = async (req, res) => {
   const { _id } = req.user;
   try {
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
-      throw new Error('Incorrect id');
-    }
     const oldCard = await Card.findById(req.params.cardId);
 
     if (!oldCard) {
@@ -115,8 +111,9 @@ const dislikeCard = async (req, res) => {
 
     res.status(200).send(card);
   } catch (err) {
-    if (err.message === 'Incorrect id') {
+    if (err.stack.includes('CastError')) {
       invalidDataError(res, err, 'Переданы некорректные _id карточки');
+      return;
     }
 
     if (err.message === 'Not found') {
