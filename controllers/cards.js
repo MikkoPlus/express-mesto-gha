@@ -8,8 +8,8 @@ const {
 const getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.status(200).send(cards))
-    .catch((err) => {
-      iternalServerError(res, err);
+    .catch(() => {
+      iternalServerError(res);
     });
 };
 
@@ -23,13 +23,12 @@ const createCard = (req, res) => {
       if (err.stack.includes('ValidationError')) {
         invalidDataError(
           res,
-          err,
           'Переданы некорректные данные при создании карточки.',
         );
         return;
       }
 
-      iternalServerError(res, err);
+      iternalServerError(res);
     });
 };
 
@@ -39,15 +38,15 @@ const deleteCard = (req, res) => {
     .then(() => res.status(200).send({ message: 'Card is delete' }))
     .catch((err) => {
       if (err.stack.includes('CastError')) {
-        invalidDataError(res, err, 'Переданы некорректные _id карточки');
+        invalidDataError(res, 'Переданы некорректные _id карточки');
       }
 
       if (err.message === 'Not found') {
-        notFoundError(res, err, 'Карточка с указанным _id не найдена.');
+        notFoundError(res, 'Карточка с указанным _id не найдена.');
         return;
       }
 
-      iternalServerError(res, err);
+      iternalServerError(res);
     });
 };
 
@@ -71,24 +70,23 @@ const likeCard = async (req, res) => {
     res.status(200).send(card);
   } catch (err) {
     if (err.stack.includes('CastError')) {
-      invalidDataError(res, err, 'Передан некорректный _id карточки');
+      invalidDataError(res, 'Передан некорректный _id карточки');
     }
 
     if (err.message === 'Not found') {
-      notFoundError(res, err, 'Передан несуществующий _id карточки');
+      notFoundError(res, 'Передан несуществующий _id карточки');
       return;
     }
 
     if (err.message === 'Invalid data') {
       invalidDataError(
         res,
-        err,
         'Переданы некорректные данные для постановки лайка',
       );
       return;
     }
 
-    iternalServerError(res, err);
+    iternalServerError(res);
   }
 };
 
@@ -112,24 +110,23 @@ const dislikeCard = async (req, res) => {
     res.status(200).send(card);
   } catch (err) {
     if (err.stack.includes('CastError')) {
-      invalidDataError(res, err, 'Переданы некорректные _id карточки');
+      invalidDataError(res, 'Переданы некорректные _id карточки');
       return;
     }
 
     if (err.message === 'Not found') {
-      notFoundError(res, err, 'Передан несуществующий _id карточки');
+      notFoundError(res, 'Передан несуществующий _id карточки');
       return;
     }
 
     if (err.message === 'Invalid data') {
       invalidDataError(
         res,
-        err,
         'Переданы некорректные данные для снятия лайка',
       );
       return;
     }
-    iternalServerError(res, err);
+    iternalServerError(res);
   }
 };
 

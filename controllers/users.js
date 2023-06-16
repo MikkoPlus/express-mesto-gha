@@ -10,8 +10,8 @@ const getUsers = (req, res) => {
     .then((users) => {
       res.status(200).send(users);
     })
-    .catch((err) => {
-      iternalServerError(res, err);
+    .catch(() => {
+      iternalServerError(res);
     });
 };
 
@@ -21,14 +21,14 @@ const getUserById = (req, res) => {
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.message === 'Not found') {
-        notFoundError(res, err, 'Пользователь по указанному _id не найден.');
+        notFoundError(res, 'Пользователь по указанному _id не найден.');
         return;
       }
       if (err.stack.includes('CastError')) {
-        invalidDataError(res, err, 'Передан некорректный _id пользователя');
+        invalidDataError(res, 'Передан некорректный _id пользователя');
         return;
       }
-      iternalServerError(res, err);
+      iternalServerError(res);
     });
 };
 
@@ -39,12 +39,11 @@ const createUser = (req, res) => {
       if (err.message.includes('validation failed')) {
         invalidDataError(
           res,
-          err,
           'Переданы некорректные данные при создании пользователя.',
         );
         return;
       }
-      iternalServerError(res, err);
+      iternalServerError(res);
     });
 };
 
@@ -58,18 +57,17 @@ const updateUserAvatar = (req, res) => {
     .then((user) => res.status(200).send({ data: user }))
     .catch((err) => {
       if (err.message === 'Not found') {
-        notFoundError(res, err, 'Пользователь с указанным _id не найден');
+        notFoundError(res, 'Пользователь с указанным _id не найден');
         return;
       }
       if (err.message.includes('Validation failed')) {
         invalidDataError(
           res,
-          err,
           'Переданы некорректные данные при обновлении аватара.',
         );
         return;
       }
-      iternalServerError(res, err);
+      iternalServerError(res);
     });
 };
 
@@ -83,18 +81,17 @@ const updateUserData = (req, res) => {
     .then((user) => res.status(200).send({ data: user }))
     .catch((err) => {
       if (err.message === 'Not found') {
-        notFoundError(res, err, 'Пользователь с указанным _id не найден.');
+        notFoundError(res, 'Пользователь с указанным _id не найден.');
         return;
       }
       if (err.message.includes('Validation failed')) {
         invalidDataError(
           res,
-          err,
           'Переданы некорректные данные при обновлении профиля.',
         );
         return;
       }
-      iternalServerError(res, err);
+      iternalServerError(res);
     });
 };
 
