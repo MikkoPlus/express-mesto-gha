@@ -7,7 +7,7 @@ const {
 
 const getCards = (req, res) => {
   Card.find({})
-    .then((cards) => res.status(200).send(cards))
+    .then((cards) => res.send(cards))
     .catch(() => {
       iternalServerError(res);
     });
@@ -35,10 +35,11 @@ const createCard = (req, res) => {
 const deleteCard = (req, res) => {
   Card.deleteOne({ _id: req.params.cardId })
     .orFail(() => new Error('Not found'))
-    .then(() => res.status(200).send({ message: 'Card is delete' }))
+    .then(() => res.send({ message: 'Card is delete' }))
     .catch((err) => {
       if (err.stack.includes('CastError')) {
         invalidDataError(res, 'Переданы некорректные _id карточки');
+        return;
       }
 
       if (err.message === 'Not found') {
@@ -67,10 +68,11 @@ const likeCard = async (req, res) => {
       { new: true },
     );
 
-    res.status(200).send(card);
+    res.send(card);
   } catch (err) {
     if (err.stack.includes('CastError')) {
       invalidDataError(res, 'Передан некорректный _id карточки');
+      return;
     }
 
     if (err.message === 'Not found') {
@@ -107,7 +109,7 @@ const dislikeCard = async (req, res) => {
       { new: true },
     );
 
-    res.status(200).send(card);
+    res.send(card);
   } catch (err) {
     if (err.stack.includes('CastError')) {
       invalidDataError(res, 'Переданы некорректные _id карточки');

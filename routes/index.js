@@ -5,6 +5,6 @@ const notFound = require('../controllers/notFound');
 
 router.use('/users', userRoutes);
 router.use('/cards', cardRoutes);
-router.use('/404', notFound);
+router.use('/*', notFound);
 
 module.exports = router;

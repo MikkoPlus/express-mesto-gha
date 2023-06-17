@@ -8,7 +8,7 @@ const {
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => {
-      res.status(200).send(users);
+      res.send(users);
     })
     .catch(() => {
       iternalServerError(res);
@@ -18,7 +18,7 @@ const getUsers = (req, res) => {
 const getUserById = (req, res) => {
   User.findById(req.params.id)
     .orFail(() => new Error('Not found'))
-    .then((user) => res.status(200).send(user))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.message === 'Not found') {
         notFoundError(res, 'Пользователь по указанному _id не найден.');
@@ -33,12 +33,14 @@ const getUserById = (req, res) => {
 };
 
 const createUser = (req, res) => {
+  console.log(req.body)
   User.create(req.body)
     .then((user) => res.status(201).send(user))
     .catch((err) => {
-      if (err.message.includes('validation failed')) {
+      if (err.name === 'ValidationError') {
         invalidDataError(
           res,
+          err,
           'Переданы некорректные данные при создании пользователя.',
         );
         return;
@@ -54,13 +56,13 @@ const updateUserAvatar = (req, res) => {
     { new: true, runValidators: true },
   )
     .orFail(() => new Error('Not found'))
-    .then((user) => res.status(200).send({ data: user }))
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.message === 'Not found') {
         notFoundError(res, 'Пользователь с указанным _id не найден');
         return;
       }
-      if (err.message.includes('Validation failed')) {
+      if (err.name === 'ValidationError') {
         invalidDataError(
           res,
           'Переданы некорректные данные при обновлении аватара.',
@@ -78,13 +80,13 @@ const updateUserData = (req, res) => {
     { new: true, runValidators: true },
   )
     .orFail(() => new Error('Not found'))
-    .then((user) => res.status(200).send({ data: user }))
+    .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.message === 'Not found') {
         notFoundError(res, 'Пользователь с указанным _id не найден.');
         return;
       }
-      if (err.message.includes('Validation failed')) {
+      if (err.name === 'ValidationError') {
         invalidDataError(
           res,
           'Переданы некорректные данные при обновлении профиля.',
