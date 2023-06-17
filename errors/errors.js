@@ -8,11 +8,9 @@ const iternalServerError = (res) => {
   });
 };
 
-const invalidDataError = (res,err,  message) => {
+const invalidDataError = (res, message) => {
   res.status(ERROR_CODE_INVALID_DATA).send({
     message: `${message}`,
-    err: err.message,
-    stack: err.stack
   });
 };
 
