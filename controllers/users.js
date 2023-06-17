@@ -48,7 +48,7 @@ const createUser = (req, res) => {
     });
 };
 
-const updateUserAvatar = (req, res) => {
+const updateUserAvatar =  (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     { avatar: req.body.avatar },

@@ -19,7 +19,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       validate: {
-        validator: (v) => urlRegExp.test(v),
+        validator: (v) => {
+          urlRegExp.test(v)
+        },
         message: 'Некорректный URL',
       }
     },
