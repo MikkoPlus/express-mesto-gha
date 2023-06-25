@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const router = require('./routes/index');
 const { createUser, login } = require('./controllers/users');
 const errorHandler = require('./middlewares/errors');
+const { userDataValidation } = require('./middlewares/celebrateValidation');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -20,10 +21,10 @@ app.use((req, res, next) => {
   };
   next();
 });
-console.log(process.env['JWT_SECRET'])
+console.log(process.env['JWT_SECRET']);
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', userDataValidation, login);
+app.post('/signup', userDataValidation, createUser);
 app.use(cookieParser());
 app.use(router);
 app.use(errorHandler);

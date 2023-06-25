@@ -1,3 +1,5 @@
+const { isCelebrateError } = require('celebrate');
+
 const {
   NotFoundError,
   IternalServerError,
@@ -9,9 +11,8 @@ const {
 
 const errorHandler = (err, req, res, next) => {
   let error;
-  console.log(err)
   const reqDirectoryPath = req.path.split('/')[1];
-  if (err.name === 'JsonWebTokenError') {
+  if (err.name === 'JsonWebTokenError' || err instanceof UnauthorizedError) {
     error = new UnauthorizedError(err);
   } else if (err instanceof NotFoundError || err.statusCode === 404) {
     error = new NotFoundError(err);
@@ -23,7 +24,8 @@ const errorHandler = (err, req, res, next) => {
   } else if (
     err.name === 'ValidationError' ||
     err.name === 'CastError' ||
-    err.statusCode === 400
+    err.statusCode === 400 ||
+    isCelebrateError(err)
   ) {
     error = new InvalidDataError(err);
   } else if (err instanceof ForbiddenError) {

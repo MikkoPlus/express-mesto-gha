@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jsonWebToken = require('jsonwebtoken');
 
 const User = require('../models/user');
-const { NotFoundError } = require('../errors/errors');
+const { NotFoundError, UnauthorizedError } = require('../errors/errors');
 
 const notFoundError = (message) => new NotFoundError(message);
 
@@ -88,7 +88,7 @@ const login = (req, res, next) => {
   User.findOne({ email })
     .select('+password')
     .orFail(() => {
-      throw new NotFoundError('');
+      throw new UnauthorizedError('');
     })
     .then((user) => {
       bcrypt.compare(String(password), user.password).then((isValidUser) => {
