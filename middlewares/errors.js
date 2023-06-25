@@ -24,8 +24,8 @@ const errorHandler = (err, req, res, next) => {
   } else if (
     err.name === 'ValidationError' ||
     err.name === 'CastError' ||
-    err.statusCode === 400 ||
-    isCelebrateError(err)
+    err.statusCode === 400
+    // isCelebrateError(err)
   ) {
     error = new InvalidDataError(err);
   } else if (err instanceof ForbiddenError) {
