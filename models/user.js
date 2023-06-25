@@ -1,32 +1,57 @@
 const mongoose = require('mongoose');
-const urlRegExp = require('../utils/regex')
+const { isEmail, isURL } = require('validator');
 
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Поле "name" должно быть заполнено'],
+      default: 'Жак-Ив Кусто',
       minlength: [2, 'Минимальная длина поля "name" - 2'],
       maxlength: [30, 'Максимальная длина поля "name" - 30'],
     },
     about: {
       type: String,
-      required: true,
+      default: 'Исследователь океана',
       minlength: 2,
       maxlength: 30,
     },
     avatar: {
       type: String,
-      required: true,
+      default:
+        'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
       validate: {
         validator: (v) => {
-          urlRegExp.test(v)
+          return isURL(v);
         },
         message: 'Некорректный URL',
-      }
+      },
+    },
+    email: {
+      type: String,
+      required: [true, 'Поле "email" должно быть заполнено'],
+      unique: true,
+      validate: {
+        validator: (v) => {
+          return isEmail(v);
+        },
+        message: 'Некорректный URL',
+      },
+    },
+    password: {
+      type: String,
+      select: false,
+      required: [true, 'Поле "password" должно быть заполнено'],
+      minlength: 1,
     },
   },
-  { versionKey: false },
+  { versionKey: false }
 );
+
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+
+  return user;
+};
 
 module.exports = mongoose.model('user', userSchema);

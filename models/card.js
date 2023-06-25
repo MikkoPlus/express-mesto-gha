@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const urlRegExp = require('../utils/regex')
+const { isURL } = require('validator');
 
 const cardSchema = new mongoose.Schema(
   {
@@ -15,7 +15,9 @@ const cardSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 30,
       validate: {
-        validator: (v) => urlRegExp.test(v),
+        validator: (v) => {
+          return isURL(v)
+        },
         message: 'Некоректный URL',
       },
     },
@@ -36,7 +38,7 @@ const cardSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { versionKey: false },
+  { versionKey: false }
 );
 
 module.exports = mongoose.model('card', cardSchema);

@@ -1,134 +1,87 @@
 const Card = require('../models/card');
 const {
-  iternalServerError,
-  invalidDataError,
-  notFoundError,
+  NotFoundError,
+  InvalidDataError,
+  ForbiddenError,
 } = require('../errors/errors');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch(() => {
-      iternalServerError(res);
-    });
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   Card.create({
     ...req.body,
     owner: req.user._id,
   })
     .then((cards) => res.status(201).send(cards))
-    .catch((err) => {
-      if (err.stack.includes('ValidationError')) {
-        invalidDataError(
-          res,
-          'Переданы некорректные данные при создании карточки.',
-        );
-        return;
-      }
-
-      iternalServerError(res);
-    });
+    .catch(next);
 };
 
-const deleteCard = (req, res) => {
-  Card.deleteOne({ _id: req.params.cardId })
-    .orFail(() => new Error('Not found'))
-    .then(() => res.send({ message: 'Card is delete' }))
-    .catch((err) => {
-      if (err.stack.includes('CastError')) {
-        invalidDataError(res, 'Переданы некорректные _id карточки');
-        return;
+const deleteCard = async (req, res, next) => {
+  try {
+    const card = await Card.findById(req.params.cardId);
+    if (card) {
+      if (String(card.owner) === req.user._id) {
+        Card.deleteOne({ _id: req.params.cardId })
+          .then(() => res.send({ message: 'Карточка удалена' }))
+          .catch(next);
+      } else {
+        throw new ForbiddenError('');
       }
-
-      if (err.message === 'Not found') {
-        notFoundError(res, 'Карточка с указанным _id не найдена.');
-        return;
-      }
-
-      iternalServerError(res);
-    });
+    } else {
+      throw new NotFoundError('');
+    }
+  } catch (err) {
+    next(err);
+  }
 };
 
-const likeCard = async (req, res) => {
+const likeCard = async (req, res, next) => {
   const { _id } = req.user;
   try {
     const oldCard = await Card.findById(req.params.cardId);
 
     if (!oldCard) {
-      throw new Error('Not found');
+      throw new NotFoundError('');
     } else if (oldCard.likes.includes(_id)) {
-      throw new Error('Invalid data');
+      throw new InvalidDataError('');
     }
 
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: _id } },
-      { new: true },
+      { new: true }
     );
 
     res.send(card);
   } catch (err) {
-    if (err.stack.includes('CastError')) {
-      invalidDataError(res, 'Передан некорректный _id карточки');
-      return;
-    }
-
-    if (err.message === 'Not found') {
-      notFoundError(res, 'Передан несуществующий _id карточки');
-      return;
-    }
-
-    if (err.message === 'Invalid data') {
-      invalidDataError(
-        res,
-        'Переданы некорректные данные для постановки лайка',
-      );
-      return;
-    }
-
-    iternalServerError(res);
+    next(err);
   }
 };
 
-const dislikeCard = async (req, res) => {
+const dislikeCard = async (req, res, next) => {
   const { _id } = req.user;
   try {
     const oldCard = await Card.findById(req.params.cardId);
 
     if (!oldCard) {
-      throw new Error('Not found');
-    } else if (!oldCard.likes.includes(_id)) {
-      throw new Error('Invalid data');
+      throw new NotFoundError('');
+    } else if (oldCard.likes.includes(_id)) {
+      throw new InvalidDataError('');
     }
 
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
-      { new: true },
+      { new: true }
     );
 
     res.send(card);
   } catch (err) {
-    if (err.stack.includes('CastError')) {
-      invalidDataError(res, 'Переданы некорректные _id карточки');
-      return;
-    }
-
-    if (err.message === 'Not found') {
-      notFoundError(res, 'Передан несуществующий _id карточки');
-      return;
-    }
-
-    if (err.message === 'Invalid data') {
-      invalidDataError(
-        res,
-        'Переданы некорректные данные для снятия лайка',
-      );
-      return;
-    }
-    iternalServerError(res);
+    next(err);
   }
 };
 
