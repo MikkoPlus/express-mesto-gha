@@ -33,7 +33,13 @@ const deleteCard = async (req, res, next) => {
       if (String(card.owner) === req.user._id) {
         Card.deleteOne({ _id: req.params.cardId })
           .then(() => res.send({ message: 'Карточка удалена' }))
-          .catch(next);
+          .catch((err) => {
+            if (err.name === 'CastError') {
+              next(new InvalidDataError('Передан некорректный _id карточки'));
+            } else {
+              next(err);
+            }
+          });
       } else {
         next(new ForbiddenError());
       }
