@@ -23,13 +23,7 @@ const getUserById = (req, res, next) => {
       next(new NotFoundError('Пользователь с таким _id не найден'));
     })
     .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new InvalidDataError('Некорректный _id пользователя'));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 const createUser = (req, res, next) => {
