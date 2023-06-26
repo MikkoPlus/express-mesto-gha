@@ -2,9 +2,12 @@ const bcrypt = require('bcryptjs');
 const jsonWebToken = require('jsonwebtoken');
 
 const User = require('../models/user');
-const { NotFoundError, UnauthorizedError } = require('../errors/errors');
-
-const notFoundError = (message) => new NotFoundError(message);
+const {
+  NotFoundError,
+  UnauthorizedError,
+  InvalidDataError,
+  EmailIsExistsError,
+} = require('../errors/errors');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -17,78 +20,84 @@ const getUsers = (req, res, next) => {
 const getUserById = (req, res, next) => {
   User.findById(req.params.id)
     .orFail(() => {
-      throw new NotFoundError('');
+      next(new NotFoundError('Пользователь с таким _id не найден'));
     })
     .then((user) => res.send(user))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new InvalidDataError('Некорректный _id пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const createUser = (req, res, next) => {
-  //Проверяю, есть ли почта и пароль в теле запроса
-  const { email, password } = req.body;
-  if (!email || !password) {
-    res.status(400).send({ message: 'Отсутствует почта или пароль' });
-    return;
-  }
-  //Получаю из тела запроса пароль, хеширую при помощи bcrypt
-  bcrypt.hash(String(req.body.password), 10).then((hashedPassword) => {
-    //Создаю пользователя
-    User.create({ ...req.body, password: hashedPassword })
-      .then((user) => res.status(201).send(user))
-      .catch(next);
-  });
+  // Получаю из тела запроса пароль, хеширую при помощи bcrypt
+  bcrypt
+    .hash(String(req.body.password), 10)
+    .then((hashedPassword) => {
+      // Создаю пользователя
+      User.create({ ...req.body, password: hashedPassword })
+        .then((user) => res.status(201).send(user))
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            next(new InvalidDataError());
+          } else if (err.code === 11000) {
+            next(new EmailIsExistsError(err));
+          } else {
+            next(err);
+          }
+        });
+    })
+    .catch(next);
 };
 
 const updateUserAvatar = (req, res, next) => {
-  const { avatar } = req.body;
-  if (!avatar) {
-    res.status(400).send({ message: 'Отсутствует ссылка на аватар' });
-    return;
-  }
-
   User.findByIdAndUpdate(
     req.user._id,
     { avatar: req.body.avatar },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   )
     .orFail(() => {
-      throw new NotFoundError('');
+      next(new NotFoundError('Пользователь с таким _id не найден'));
     })
     .then((user) => res.send({ data: user }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new InvalidDataError(''));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const updateUserData = (req, res, next) => {
-  const { name, about } = req.body;
-  if (!name && !about) {
-    res.status(400).send({ message: 'Отсутствуют данные' });
-    return;
-  }
-
   User.findByIdAndUpdate(
     req.user._id,
-    { name: name, about: about },
-    { new: true, runValidators: true }
+    { name: req.body.name, about: req.body.about },
+    { new: true, runValidators: true },
   )
     .orFail(() => {
-      throw new NotFoundError('');
+      next(new NotFoundError('Пользователь с таким _id не найден'));
     })
     .then((user) => res.send({ data: user }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new InvalidDataError());
+      } else {
+        next(err);
+      }
+    });
 };
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    res.status(400).send({ message: 'Отсутствует email или password' });
-    return;
-  }
-
-  User.findOne({ email })
+  return User.findOne({ email })
     .select('+password')
     .orFail(() => {
-      throw new UnauthorizedError('');
+      next(new UnauthorizedError());
     })
     .then((user) => {
       bcrypt.compare(String(password), user.password).then((isValidUser) => {
@@ -98,8 +107,8 @@ const login = (req, res, next) => {
             {
               _id: user._id,
             },
-            process.env['JWT_SECRET'],
-            { expiresIn: '7d' }
+            process.env.JWT_SECRET || 'SECRET-KEY',
+            { expiresIn: '7d' },
           );
           // Прикрепил к куке
           res.cookie('jwt', jwt, {
@@ -108,7 +117,7 @@ const login = (req, res, next) => {
           });
           res.send({ data: user.toJSON() });
         } else {
-          res.status(403).send({ message: 'Неправильный email или пароль' });
+          next(new UnauthorizedError());
         }
       });
     })

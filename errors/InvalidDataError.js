@@ -1,7 +1,6 @@
 class InvalidDataError extends Error {
-  constructor(err, msg) {
+  constructor(err) {
     super(err);
-    this.message = msg || 'Переданы некорректные данные';
     this.statusCode = 400;
   }
 }

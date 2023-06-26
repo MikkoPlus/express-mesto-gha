@@ -17,7 +17,13 @@ const createCard = (req, res, next) => {
     owner: req.user._id,
   })
     .then((cards) => res.status(201).send(cards))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new InvalidDataError('Некоректные данные при создании карточки'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const deleteCard = async (req, res, next) => {
@@ -29,10 +35,10 @@ const deleteCard = async (req, res, next) => {
           .then(() => res.send({ message: 'Карточка удалена' }))
           .catch(next);
       } else {
-        throw new ForbiddenError('');
+        next(new ForbiddenError());
       }
     } else {
-      throw new NotFoundError('');
+      next(new NotFoundError('Карточка с переданным _id не найдена'));
     }
   } catch (err) {
     next(err);
@@ -45,15 +51,14 @@ const likeCard = async (req, res, next) => {
     const oldCard = await Card.findById(req.params.cardId);
 
     if (!oldCard) {
-      throw new NotFoundError('');
-    } else if (oldCard.likes.includes(_id)) {
-      throw new InvalidDataError('');
+      next(new NotFoundError('Карточка с переданным _id не найдена'));
+      return;
     }
 
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: _id } },
-      { new: true }
+      { new: true },
     );
 
     res.send(card);
@@ -63,26 +68,13 @@ const likeCard = async (req, res, next) => {
 };
 
 const dislikeCard = async (req, res, next) => {
-  const { _id } = req.user;
-  try {
-    const oldCard = await Card.findById(req.params.cardId);
-
-    if (!oldCard) {
-      throw new NotFoundError('');
-    } else if (oldCard.likes.includes(_id)) {
-      throw new InvalidDataError('');
-    }
-
-    const card = await Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $pull: { likes: req.user._id } },
-      { new: true }
-    );
-
-    res.send(card);
-  } catch (err) {
-    next(err);
-  }
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } },
+    { new: true },
+  )
+    .then((card) => res.send(card))
+    .catch(next);
 };
 
 module.exports = {

@@ -7,7 +7,7 @@ const { errors } = require('celebrate');
 
 const router = require('./routes/index');
 const { createUser, login } = require('./controllers/users');
-const errorHandler = require('./middlewares/errors');
+const errorHandler = require('./middlewares/error');
 const { userDataValidation } = require('./middlewares/celebrateValidation');
 
 const { PORT = 3000 } = process.env;
@@ -16,13 +16,6 @@ const app = express();
 mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use(express.json());
 app.use(helmet());
-app.use((req, res, next) => {
-  req.user = {
-    _id: '648ab9d9c6251df3263ed9fe',
-  };
-  next();
-});
-console.log(process.env['JWT_SECRET']);
 
 app.post('/signin', userDataValidation, login);
 app.post('/signup', userDataValidation, createUser);
