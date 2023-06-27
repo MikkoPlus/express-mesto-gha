@@ -8,7 +8,9 @@ const { errors } = require('celebrate');
 const router = require('./routes/index');
 const { createUser, login } = require('./controllers/users');
 const errorHandler = require('./middlewares/error');
-const { userRegistrationValidation } = require('./middlewares/celebrateValidation');
+const {
+  userRegistrationValidation,
+} = require('./middlewares/celebrateValidation');
 
 const { PORT = 3000 } = process.env;
 const app = express();

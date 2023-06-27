@@ -1,7 +1,6 @@
 const Card = require('../models/card');
 const {
   NotFoundError,
-  InvalidDataError,
   ForbiddenError,
 } = require('../errors/errors');
 
@@ -17,13 +16,7 @@ const createCard = (req, res, next) => {
     owner: req.user._id,
   })
     .then((cards) => res.status(201).send(cards))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new InvalidDataError('Некоректные данные при создании карточки'));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 const deleteCard = async (req, res, next) => {
@@ -41,11 +34,7 @@ const deleteCard = async (req, res, next) => {
       next(new NotFoundError('Карточка с переданным _id не найдена'));
     }
   } catch (err) {
-    if (err.name === 'CastError') {
-      next(new InvalidDataError('Передан некорректный _id карточки'));
-    } else {
-      next(err);
-    }
+    next(err);
   }
 };
 
@@ -67,11 +56,7 @@ const likeCard = async (req, res, next) => {
 
     res.send(card);
   } catch (err) {
-    if (err.name === 'CastError') {
-      next(new InvalidDataError('Передан некорректный _id карточки'));
-    } else {
-      next(err);
-    }
+    next(err);
   }
 };
 
@@ -91,11 +76,7 @@ const dislikeCard = async (req, res, next) => {
     );
     res.send(card);
   } catch (err) {
-    if (err.name === 'CastError') {
-      next(new InvalidDataError('Передан некорректный _id карточки'));
-    } else {
-      next(err);
-    }
+    next(err);
   }
 };
 
