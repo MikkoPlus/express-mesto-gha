@@ -33,13 +33,7 @@ const deleteCard = async (req, res, next) => {
       if (String(card.owner) === req.user._id) {
         Card.deleteOne({ _id: req.params.cardId })
           .then(() => res.send({ message: 'Карточка удалена' }))
-          .catch((err) => {
-            if (err.name === 'CastError') {
-              next(new InvalidDataError('Передан некорректный _id карточки'));
-            } else {
-              next(err);
-            }
-          });
+          .catch(next);
       } else {
         next(new ForbiddenError());
       }
@@ -47,7 +41,11 @@ const deleteCard = async (req, res, next) => {
       next(new NotFoundError('Карточка с переданным _id не найдена'));
     }
   } catch (err) {
-    next(err);
+    if (err.name === 'CastError') {
+      next(new InvalidDataError('Передан некорректный _id карточки'));
+    } else {
+      next(err);
+    }
   }
 };
 
@@ -69,18 +67,36 @@ const likeCard = async (req, res, next) => {
 
     res.send(card);
   } catch (err) {
-    next(err);
+    if (err.name === 'CastError') {
+      next(new InvalidDataError('Передан некорректный _id карточки'));
+    } else {
+      next(err);
+    }
   }
 };
 
 const dislikeCard = async (req, res, next) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true },
-  )
-    .then((card) => res.send(card))
-    .catch(next);
+  const { _id } = req.user;
+  try {
+    const oldCard = await Card.findById(req.params.cardId);
+
+    if (!oldCard) {
+      next(new NotFoundError('Карточка с переданным _id не найдена'));
+      return;
+    }
+    const card = await Card.findByIdAndUpdate(
+      req.params.cardId,
+      { $pull: { likes: _id } },
+      { new: true },
+    );
+    res.send(card);
+  } catch (err) {
+    if (err.name === 'CastError') {
+      next(new InvalidDataError('Передан некорректный _id карточки'));
+    } else {
+      next(err);
+    }
+  }
 };
 
 module.exports = {
