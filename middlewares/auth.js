@@ -14,7 +14,7 @@ const auth = (req, res, next) => {
   try {
     payload = jwt.verify(token, process.env.JWT_SECRET || 'SECRET-KEY');
   } catch (err) {
-    next(new UnauthorizedError(err));
+    next(new UnauthorizedError());
   }
   req.user = payload;
   next();

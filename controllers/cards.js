@@ -2,6 +2,7 @@ const Card = require('../models/card');
 const {
   NotFoundError,
   ForbiddenError,
+  InvalidDataError,
 } = require('../errors/errors');
 
 const getCards = (req, res, next) => {
@@ -16,7 +17,13 @@ const createCard = (req, res, next) => {
     owner: req.user._id,
   })
     .then((cards) => res.status(201).send(cards))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new InvalidDataError('Переданы некорректные данные'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const deleteCard = async (req, res, next) => {

@@ -1,7 +1,6 @@
 {
   "extends": "airbnb-base",
   "rules": {
-    "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
     "operator-linebreak": ["error", "before", { "overrides": { "||": "before" } }],
     "no-underscore-dangle": ["error", { "allow": ["_id"]}],
     "linebreak-style": 0

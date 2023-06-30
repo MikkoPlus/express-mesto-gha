@@ -18,24 +18,36 @@ const userRegistrationValidation = celebrate({
   }),
 });
 
-const userProfileValidation = celebrate({
+const userProfileDataValidation = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
+  }),
+});
+
+const userProfileAvatarValidation = celebrate({
+  body: Joi.object().keys({
     avatar: Joi.string().regex(urlRegExp),
   }),
 });
 
-const checkId = celebrate({
+const checkUserId = celebrate({
+  params: Joi.object().keys({
+    id: Joi.string().hex().length(24),
+  }),
+});
+
+const checkCardId = celebrate({
   params: Joi.object().keys({
     cardId: Joi.string().hex().length(24),
-    id: Joi.string().hex().length(24),
   }),
 });
 
 module.exports = {
   createCardValidation,
   userRegistrationValidation,
-  userProfileValidation,
-  checkId,
+  userProfileDataValidation,
+  userProfileAvatarValidation,
+  checkUserId,
+  checkCardId,
 };
