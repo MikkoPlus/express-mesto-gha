@@ -3,7 +3,6 @@ const { UnauthorizedError } = require('../errors/errors');
 
 const auth = (req, res, next) => {
   const token = req.cookies.jwt;
-
   if (!token) {
     next(new UnauthorizedError());
     return;

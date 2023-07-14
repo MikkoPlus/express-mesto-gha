@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
+
 const { errors } = require('celebrate');
 const { errorLogger, requestLogger } = require('./middlewares/logger');
 
@@ -12,9 +14,11 @@ const errorHandler = require('./middlewares/error');
 const { PORT = 3000 } = process.env;
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/mestodb');
+mongoose.connect('mongodb://localhost:27017/mestodatabase');
 app.use(express.json());
 app.use(helmet());
+app.use(cors({ credentials: true, origin: 'http://meste4ko.nomoredomains.work' }));
+app.options('*', cors());
 app.use(cookieParser());
 app.use(requestLogger);
 app.use(router);
